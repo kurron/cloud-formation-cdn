@@ -1,7 +1,7 @@
 # Overview
 This project is a [CloudFormation](https://aws.amazon.com/cloudformation/) template
-that creates a new [ELB](https://aws.amazon.com/elasticloadbalancing/) instance into an existing
-VPC.  The ELB spans availability zones.
+that creates a new [CDN](https://aws.amazon.com/cloudfront/) distribution, attaching it
+to an existing ELB.
 
 ## Assets Produced
 1. TODO
@@ -17,7 +17,7 @@ The following tags are applied to assets that allow tagging:
 # Prerequisites
 * a working [AW CLI](https://aws.amazon.com/cli/)
 * you have run `aws configure`, providing the required information
-* a working VPC [based on this template]https://github.com/kurron/cloud-formation-vpc)
+* a working ELB [based on this template]https://github.com/kurron/cloud-formation-elb)
 
 # Building
 There is noting to build.
@@ -27,7 +27,7 @@ There is nothing to install.
 
 # Tips and Tricks
 
-## Creating an ELB Instance
+## Creating The Stack
 There is a convenience Bash script that can be run to create a new cluster.  If
 you just want to test things out run `scripts/create-stack.sh`.  In several
 moments, your cluster should be created.  Check your AWS console for confirmation.
@@ -46,7 +46,7 @@ There is a convenience script for destroying clusters.  Run
 `scripts/destroy-stack.sh production-cluster` to destroy the cluster we created above.
 
 ## Creation Via The Console
-TODO: need to talk about getting the `elb.yml` file into S3 so that the console can see it
+TODO: need to talk about getting the `cdn.yml` file into S3 so that the console can see it
 
 # Troubleshooting
 TODO
