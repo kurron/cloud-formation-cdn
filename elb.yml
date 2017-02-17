@@ -1,0 +1,148 @@
+---
+# Cannot get this to work for some reason
+#AWSTemplateFormatVersion: AWSTemplateFormatVersion: '2010-09-09'
+
+Description: This template creates a new Elastic Load Balancer (ELB) into an existing VPC.
+
+Metadata:
+    Foo:
+        Description: 'something clever'
+    Bar:
+        Description: 'something clever'
+
+# These show up in the console and are expected to be provided by the operator
+Parameters:
+    Project:
+        Description: 'Project name this cluster is has been created for'
+        Type: 'String'
+        Default: 'Weapon X'
+
+    Creator:
+        Description: 'Tool or person creating this cluster'
+        Type: 'String'
+        Default: 'CloudFormation'
+
+    Environment:
+        Description: 'Context the cluster will be used in.  Common values are production, testing and development.'
+        Type: 'String'
+        Default: 'development'
+
+    Notes:
+        Description: 'Notes to apply, normally edited in the console.'
+        Type: 'String'
+        Default: 'No notes'
+
+    Subnets:
+        Description: 'Which subnets the Applicaion Load Balancer should be deployed to.'
+        Type: List<AWS::EC2::Subnet::Id>
+
+    VPC:
+        Type: AWS::EC2::VPC::Id
+        Description: 'Which VPC the Applicaion Load Balancer should be deployed to.'
+
+    SecurityGroups:
+        Description: 'The Security Groups to apply to the Applicaion Load Balancer'
+        Type: List<AWS::EC2::SecurityGroup::Id>
+
+    LoadBalancerPort:
+        Description: The port the load balancer should listen on
+        Type: Number
+        Default: 80
+
+Resources:
+    PublicLoadBalancer:
+        Type: 'AWS::ElasticLoadBalancingV2::LoadBalancer'
+        Properties:
+            LoadBalancerAttributes:
+                - Key: 'deletion_protection.enabled'
+                  Value: 'false'
+                - Key: 'idle_timeout.timeout_seconds'
+                  Value: '60'
+            Scheme: 'internet-facing'
+            SecurityGroups:
+                Ref: SecurityGroups
+            Subnets:
+                Ref: Subnets
+            Tags:
+                - Key: 'Name'
+                  Value: !Ref 'AWS::StackName'
+                - Key: 'Project'
+                  Value:
+                      Ref: 'Project'
+                - Key: 'Purpose'
+                  Value: 'Public load balancer'
+                - Key: 'Creator'
+                  Value:
+                      Ref: 'Creator'
+                - Key: 'Environment'
+                  Value:
+                      Ref: 'Environment'
+                - Key: 'Freetext'
+                  Value: 'No notes'
+
+    # We define a default target group here, as this is a mandatory Parameters
+    # when creating an Application Load Balancer Listener. This is not used, instead
+    # a target group is created per-service in each service template (../services/*)
+    DefaultPublicTargetGroup:
+        Type: 'AWS::ElasticLoadBalancingV2::TargetGroup'
+        Properties:
+            HealthCheckIntervalSeconds: 10
+            HealthCheckPath: '/'
+            HealthCheckPort:
+                Ref: LoadBalancerPort
+            HealthCheckProtocol: HTTP
+            HealthCheckTimeoutSeconds: 5
+            HealthyThresholdCount: 3
+            Matcher:
+                HttpCode: '200-399'
+            Port:
+                Ref: LoadBalancerPort
+            Protocol: HTTP
+            Tags:
+                - Key: 'Name'
+                  Value: !Ref 'AWS::StackName'
+                - Key: 'Project'
+                  Value:
+                      Ref: 'Project'
+                - Key: 'Purpose'
+                  Value: 'Public Load Balancer'
+                - Key: 'Creator'
+                  Value:
+                      Ref: 'Creator'
+                - Key: 'Environment'
+                  Value:
+                      Ref: 'Environment'
+                - Key: 'Freetext'
+                  Value: 'No notes'
+            UnhealthyThresholdCount: 3
+            VpcId:
+                Ref: VPC
+
+    # bind the listener to the target group
+    PublicLoadBalancerListener:
+        Type: 'AWS::ElasticLoadBalancingV2::Listener'
+        Properties:
+            DefaultActions:
+                - Type: forward
+                  TargetGroupArn:
+                      Ref: DefaultPublicTargetGroup
+            LoadBalancerArn:
+                Ref: PublicLoadBalancer
+            Port:
+                Ref: LoadBalancerPort
+            Protocol: HTTP
+
+Outputs:
+    PublicLoadBalancer:
+        Description: A reference to the public facing Application Load Balancer
+        Value:
+            Ref: PublicLoadBalancer
+
+    PublicLoadBalancerUrl:
+        Description: The URL of the public facing ALB
+        Value: !GetAtt PublicLoadBalancer.DNSName
+
+    PublicLoadBalancerListener:
+        Description: A reference to the public facing listener
+        Value:
+            Ref: PublicLoadBalancerListener
