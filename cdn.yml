@@ -20,6 +20,10 @@ Parameters:
         Description: 'Port the load balancer is listening on'
         Type: 'Number'
 
+    WAF:
+        Description: 'The AWS WAF to associate with this distribution.'
+        Type: 'String'
+
 Resources:
     Distribution:
         Type: 'AWS::CloudFront::Distribution'
@@ -60,6 +64,8 @@ Resources:
                 PriceClass: 'PriceClass_All'
                 ViewerCertificate:
                     CloudFrontDefaultCertificate: true
+                WebACLId:
+                    Ref: WAF
 
 Outputs:
     Distribution:
