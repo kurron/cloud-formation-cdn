@@ -24,6 +24,10 @@ Parameters:
         Description: 'The AWS WAF to associate with this distribution.'
         Type: 'String'
 
+    Bucket:
+        Description: 'DNS name of the S3 bucket to dump logs into, eg mystack-mybucket-kdwwxmddtr2g.s3.amazonaws.com'
+        Type: 'String'
+
 Resources:
     Distribution:
         Type: 'AWS::CloudFront::Distribution'
@@ -55,6 +59,10 @@ Resources:
                     ViewerProtocolPolicy: 'redirect-to-https'
                 Enabled: true
                 HttpVersion: 'http2'
+                Logging:
+                    Bucket:
+                        Ref: Bucket
+                    IncludeCookies: true
                 Origins:
                     - DomainName: !Ref LoadBalancerDomainName
                       Id: 'ELB'
